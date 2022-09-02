@@ -1,1 +1,1 @@
-# tz-portal
+# tz-proxy
