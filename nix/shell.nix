@@ -4,5 +4,5 @@ with pkgs;
 with ocamlPackages;
 mkShell {
   inputsFrom = [ tzproxy ];
-  packages = [ nixfmt ocamlformat ocaml findlib dune odoc ocaml-lsp ];
+  packages = [ nixfmt utop ocamlformat ocaml findlib dune odoc ocaml-lsp ];
 }

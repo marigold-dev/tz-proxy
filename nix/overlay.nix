@@ -17,8 +17,8 @@ in {
         src = prev.fetchFromGitHub {
           owner = "anmonteiro";
           repo = "piaf";
-          rev = "b7ada509c8a262d155ae5d6e9ca7c98d14f9ad8a";
-          sha256 = "sha256-X3dDiZlYkzOEbuf7jFqjmV7SGsE6hi/nezbn6ht6Wdk=";
+          rev = "77f3f539f84b82cf049c20678af1898484e0ae84";
+          sha256 = "sha256-eHYHr6XEefKvQyE48GW9qA1P508YrWwsb1Ov9tX25V8=";
           fetchSubmodules = true;
         };
         patches = [ ];
