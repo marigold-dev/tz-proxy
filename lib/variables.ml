@@ -4,6 +4,7 @@ type t =
   ; tezos_host : string
   ; ratelimit_enable : bool
   ; blocklist_enable : bool
+  ; blocklist_msg : string
   ; blocklist : string list
   }
 
@@ -33,6 +34,11 @@ let load_variables () =
     | Some str -> bool_of_string str
     | None -> true
   in
+  let blocklist_msg =
+    match Sys.getenv_opt "BLOCKLIST_MSG" with
+    | Some str -> str
+    | None -> "Your IP is blocked, please contact the infra@marigold.dev"
+  in
   let blocklist =
     match Sys.getenv_opt "BLOCKLIST" with
     | Some str ->
@@ -41,5 +47,12 @@ let load_variables () =
       |> List.filter (fun x -> x <> "")
     | None -> []
   in
-  { host; port; tezos_host; ratelimit_enable; blocklist_enable; blocklist }
+  { host
+  ; port
+  ; tezos_host
+  ; ratelimit_enable
+  ; blocklist_enable
+  ; blocklist_msg
+  ; blocklist
+  }
 ;;

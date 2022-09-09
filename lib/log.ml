@@ -25,7 +25,3 @@ let setup_log ?style_renderer level =
   Logs.set_level ~all:true level;
   Logs.set_reporter format_reporter
 ;;
-
-let info fmt a = Logs.info (fun m -> m fmt a)
-let debug fmt a = Logs.debug (fun m -> m fmt a)
-let err fmt a = Logs.err (fun m -> m fmt a)
