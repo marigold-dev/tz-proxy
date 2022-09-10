@@ -29,8 +29,7 @@ let run ~port ~sw env handler =
   let config = Server.Config.create port in
   let server = Server.create ~config handler in
   let _command = Server.Command.start ~sw env server in
-  ()
-  (* Logs.info (fun m -> m "Server listening on port %d" port) *)
+  Logs.info (fun m -> m "Server listening on port %d" port)
 ;;
 
 let setup_pipeline (ctx : Ctx.t) next params = next params ctx

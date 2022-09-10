@@ -6,6 +6,7 @@ type t =
   ; blocklist_enable : bool
   ; blocklist_msg : string
   ; blocklist : string list
+  ; ratelimit : Ratelimit.t
   }
 
 let load_variables () =
@@ -23,6 +24,16 @@ let load_variables () =
     match Sys.getenv_opt "TEZOS_URL" with
     | Some tezos_url -> tezos_url
     | None -> "http://127.0.0.1:8732"
+  in
+  let limit =
+    match Sys.getenv_opt "RATE_LIMIT_MAX" with
+    | Some str -> int_of_string str
+    | None -> 300
+  in
+  let seconds =
+    match Sys.getenv_opt "RATE_LIMIT_SECONDS" with
+    | Some str -> float_of_string str
+    | None -> 60.
   in
   let ratelimit_enable =
     match Sys.getenv_opt "RATE_LIMIT_ENABLE" with
@@ -54,5 +65,6 @@ let load_variables () =
   ; blocklist_enable
   ; blocklist_msg
   ; blocklist
+  ; ratelimit = Ratelimit.create ~limit ~seconds
   }
 ;;
