@@ -9,46 +9,33 @@ type t =
   ; ratelimit : Ratelimit.t
   }
 
+let as_default default opt =
+  match opt with
+  | Some value -> value
+  | None -> default
+;;
+
 let load_variables () =
-  let host =
-    match Sys.getenv_opt "HOST" with
-    | Some host -> host
-    | None -> "http://127.0.0.1"
-  in
-  let port =
-    match Sys.getenv_opt "PORT" with
-    | Some port -> int_of_string port
-    | None -> 8080
-  in
   let tezos_host =
-    match Sys.getenv_opt "TEZOS_URL" with
-    | Some tezos_url -> tezos_url
-    | None -> "http://127.0.0.1:8732"
+    Sys.getenv_opt "TEZOS_URL" |> as_default "http://127.0.0.1:8732"
   in
+  let host = Sys.getenv_opt "HOST" |> as_default "http://127.0.0.1" in
+  let port = Sys.getenv_opt "PORT" |> as_default "8080" |> int_of_string in
   let limit =
-    match Sys.getenv_opt "RATE_LIMIT_MAX" with
-    | Some str -> int_of_string str
-    | None -> 300
+    Sys.getenv_opt "RATE_LIMIT_MAX" |> as_default "300" |> int_of_string
   in
   let seconds =
-    match Sys.getenv_opt "RATE_LIMIT_SECONDS" with
-    | Some str -> float_of_string str
-    | None -> 60.
+    Sys.getenv_opt "RATE_LIMIT_SECONDS" |> as_default "60." |> float_of_string
   in
   let ratelimit_enable =
-    match Sys.getenv_opt "RATE_LIMIT_ENABLE" with
-    | Some str -> bool_of_string str
-    | None -> true
+    Sys.getenv_opt "RATE_LIMIT_ENABLE" |> as_default "true" |> bool_of_string
   in
   let blocklist_enable =
-    match Sys.getenv_opt "BLOCKLIST_ENABLE" with
-    | Some str -> bool_of_string str
-    | None -> true
+    Sys.getenv_opt "BLOCKLIST_ENABLE" |> as_default "true" |> bool_of_string
   in
   let blocklist_msg =
-    match Sys.getenv_opt "BLOCKLIST_MSG" with
-    | Some str -> str
-    | None -> "Your IP is blocked, please contact the infra@marigold.dev"
+    Sys.getenv_opt "BLOCKLIST_MSG"
+    |> as_default "Your IP is blocked"
   in
   let blocklist =
     match Sys.getenv_opt "BLOCKLIST" with

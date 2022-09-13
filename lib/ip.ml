@@ -1,13 +1,10 @@
 open Piaf
 
-let header_x_real_ip = "X-Real-Ip"
-let header_x_forwarded_for = "X-Forwarded-For"
-
 let real_ip (params : Request_info.t Server.ctx) =
   let forwarded_for =
-    Headers.get params.request.headers header_x_forwarded_for
+    Headers.get params.request.headers Consts.header_x_forwarded_for
   in
-  let real_ip = Headers.get params.request.headers header_x_real_ip in
+  let real_ip = Headers.get params.request.headers Consts.header_x_real_ip in
   match forwarded_for, real_ip with
   | Some forwarded_for, _ when forwarded_for <> "" ->
     forwarded_for
