@@ -39,7 +39,6 @@ let rate_limite next params (ctx : Ctx.t) =
     let body =
       Body.of_string ("Too Many Requests on " ^ params.request.target)
     in
-    let too_many_requests = Status.of_code 429 in
-    Response.create ~headers ~body too_many_requests)
+    Response.create ~headers ~body `Too_many_requests)
   else next params ctx headers_str
 ;;
