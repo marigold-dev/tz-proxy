@@ -1,17 +1,31 @@
-{ pkgs, doCheck ? true }:
+{ pkgs, doCheck ? true, static ? false, nix-filter }:
 
 let inherit (pkgs) lib stdenv ocamlPackages;
+
 
 in with ocamlPackages;
 buildDunePackage rec {
   pname = "tzproxy";
   version = "0.0.0-dev";
 
-  src = lib.filterSource {
-    src = ./..;
-    dirs = [ "lib" ];
-    files = [ "dune-project" ];
-  };
+  src = with nix-filter.lib;
+    filter {
+      root = ../.;
+      include = [
+        "bin"
+        "lib"
+        "dune-project"
+        "tzproxy.opam"
+      ];
+    };
+
+  # This is the same as standard dune build but with static support
+  buildPhase = ''
+    runHook preBuild
+    echo "running ${if static then "static" else "release"} build"
+    dune build -p ${pname} --profile=${if static then "static" else "release"}
+    runHook postBuild
+  '';
 
   propagatedBuildInputs = [
     eio
@@ -24,4 +38,8 @@ buildDunePackage rec {
     ++ checkInputs;
 
   checkInputs = [ alcotest ];
+  
+  # Remove every directory which could have links to other store paths.
+  # This makes the result much smaller
+  isLibrary = false;
 }

@@ -1,0 +1,48 @@
+name: "Docker publish"
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  # Static and docker are linked because we're using the static build in docker
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: cachix/install-nix-action@v16
+      - uses: cachix/cachix-action@v10
+        with:
+          name: tz-proxy
+          authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
+
+      - name: "Build static tz-proxy via flakes"
+        run: nix build --verbose .#tzproxy_static
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set outputs
+        id: vars
+        run: |
+          echo "::set-output name=date::$(date +%Y-%m-%d)"
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+      - name: "Build docker image"
+        run: nix build .#docker
+      - name: "Load docker image"
+        run: docker load < ./result
+      - name: "Re-tag image"
+        run: |
+          docker image tag ghcr.io/marigold-dev/tz-proxy:latest ghcr.io/marigold-dev/tz-proxy:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+          docker image tag ghcr.io/marigold-dev/tz-proxy:latest ghcr.io/marigold-dev/tz-proxy:pr-${{ github.event.number }}-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+      - name: "Push image"
+        if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        run: |
+          docker image push ghcr.io/marigold-dev/tz-proxy:latest
+          docker image push ghcr.io/marigold-dev/tz-proxy:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
