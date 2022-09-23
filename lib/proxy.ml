@@ -1,5 +1,12 @@
 open Piaf
 
+let or_error = function
+  | Ok r -> r
+  | Error err ->
+    let body = Format.asprintf "Bad Gateway Error: %a" Error.pp_hum err in
+    Response.of_string ~body `Service_unavailable
+;;
+
 let proxy_handler
   (params : Request_info.t Server.ctx)
   (ctx : Ctx.t)
@@ -8,23 +15,16 @@ let proxy_handler
   let proxy_to = Uri.of_string ctx.variables.tezos_host in
   let uri = Uri.with_path proxy_to params.request.target in
   Logs.info (fun m -> m "Proxy to: %s" (Uri.to_string proxy_to));
-  let promiser, resolver = Eio.Promise.create () in
-  Eio.Fiber.fork_sub
-    ~sw:ctx.sw
-    ~on_error:(fun exn -> Logs.err (fun m -> m "Error: %a" Fmt.exn exn))
-    (fun sw_fork ->
-      let result =
-        Client.Oneshot.request
-          ~headers:(Headers.to_list params.request.headers)
-          ~body:params.request.body
-          ~meth:params.request.meth
-          ~sw:sw_fork
-          ctx.env
-          uri
-        |> Response.or_internal_error
-      in
-      Eio.Promise.resolve resolver result);
-  let response_client = Eio.Promise.await promiser in
+  let response_client =
+    Client.Oneshot.request
+      ~headers:(Headers.to_list params.request.headers)
+      ~body:params.request.body
+      ~meth:params.request.meth
+      ~sw:ctx.sw
+      ctx.env
+      uri
+    |> or_error
+  in
   let headers =
     Headers.to_list response_client.headers @ additional_headers
     |> Headers.of_list

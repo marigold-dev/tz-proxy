@@ -7,7 +7,7 @@
     nix-filter.url = "github:numtide/nix-filter";
 
     ocaml-overlays.url =
-      "github:anmonteiro/nix-overlays/0081a01960591e7415986eca055887ca76689799";
+      "github:anmonteiro/nix-overlays/e44b12fc0850d10bdbb230c917b3473d05394a00";
     ocaml-overlays.inputs = {
       nixpkgs.follows = "nixpkgs";
       flake-utils.follows = "flake-utils";
