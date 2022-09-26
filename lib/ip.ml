@@ -1,17 +1,6 @@
 open Piaf
 
-let string_to_ip str =
-  let digits = String.split_on_char '.' str in
-  let raw =
-    List.fold_left
-      (fun acc x -> acc @ [ Char.chr (int_of_string x) ])
-      []
-      digits
-    |> List.to_seq
-    |> String.of_seq
-  in
-  Eio.Net.Ipaddr.of_raw raw
-;;
+let string_to_ip str = Unix.inet_addr_of_string str |> Eio_unix.Ipaddr.of_unix
 
 let real_ip (params : Request_info.t Server.ctx) =
   let forwarded_for =
@@ -29,4 +18,4 @@ let real_ip (params : Request_info.t Server.ctx) =
     (match params.ctx.client_address with
      | `Tcp (ip, _port) -> ip
      | _ -> failwith "Not a TCP connection")
-;;
+;
