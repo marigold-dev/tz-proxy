@@ -32,10 +32,10 @@ let proxy_handler
   Response.create ~headers ~body:response_client.body response_client.status
 ;;
 
-let run ~port ~sw env handler =
+let run ~host ~port ~sw env handler =
   let config = Server.Config.create port in
   let server = Server.create ~config handler in
-  let _command = Server.Command.start ~sw env server in
+  let _command = Server.Command.start ~bind_to_address:host ~sw env server in
   Logs.info (fun m -> m "Server listening on port %d" port)
 ;;
 
@@ -44,9 +44,10 @@ let setup_pipeline (ctx : Ctx.t) next params = next params ctx
 let start ~sw env (variables : Variables.t) =
   let storage = Memory_storage.create () in
   let ctx = Ctx.create sw env storage variables in
+  let host = Ip.string_to_ip ctx.variables.host in
   setup_pipeline ctx
   @@ Middlewares.block_ip
   @@ Middlewares.rate_limite
   @@ proxy_handler
-  |> run ~port:variables.port ~sw env
+  |> run ~host ~port:variables.port ~sw env
 ;;
