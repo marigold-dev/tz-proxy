@@ -34,8 +34,7 @@ let load_variables () =
     Sys.getenv_opt "BLOCKLIST_ENABLE" |> as_default "true" |> bool_of_string
   in
   let blocklist_msg =
-    Sys.getenv_opt "BLOCKLIST_MSG"
-    |> as_default "Your IP is blocked"
+    Sys.getenv_opt "BLOCKLIST_MSG" |> as_default "Your IP is blocked"
   in
   let blocklist =
     match Sys.getenv_opt "BLOCKLIST" with

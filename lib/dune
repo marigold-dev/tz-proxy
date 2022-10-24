@@ -3,6 +3,4 @@
  (package tzproxy)
  (libraries fmt logs.fmt fmt.tty piaf eio eio_main)
  (preprocess
-  (pps
-   ppx_deriving.show
-   )))
+  (pps ppx_deriving.show)))

@@ -12,9 +12,9 @@ let proxy_handler
   (ctx : Ctx.t)
   additional_headers
   =
-  let proxy_to = Uri.of_string ctx.variables.tezos_host in
-  let uri = Uri.with_path proxy_to params.request.target in
-  Logs.info (fun m -> m "Proxy to: %s" (Uri.to_string proxy_to));
+  let host = Utils.remove_slash_end ctx.variables.tezos_host in
+  let uri = Uri.of_string (host ^ params.request.target) in
+  Logs.info (fun m -> m "Proxy to: %s" (Uri.to_string uri));
   let response_client =
     Client.Oneshot.request
       ~headers:(Headers.to_list params.request.headers)
