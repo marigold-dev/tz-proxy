@@ -26,7 +26,7 @@ let rate_limite next params (ctx : Ctx.t) =
     then ctx.variables.ratelimit.limit - counter.count
     else 0
   in
-  Logs.info (fun m ->
+  Logs.debug (fun m ->
     m "Ratelimit for IP: %s with counter: %d" ip counter.count);
   let headers_str =
     [ "X-RateLimit-Limit", ctx.variables.ratelimit.limit |> string_of_int

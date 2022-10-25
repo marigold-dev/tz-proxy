@@ -7,6 +7,7 @@ type t =
   ; blocklist_msg : string
   ; blocklist : string list
   ; ratelimit : Ratelimit.t
+  ; logs_level : Logs.level
   }
 
 let as_default default opt =
@@ -44,6 +45,14 @@ let load_variables () =
       |> List.filter (fun x -> x <> "")
     | None -> []
   in
+  let logs_level =
+    match Sys.getenv_opt "LOGS_LEVEL" with
+    | Some "debug" -> Logs.Debug
+    | Some "info" -> Logs.Info
+    | Some "warn" -> Logs.Warning
+    | Some "error" -> Logs.Error
+    | _ -> Logs.Info
+  in
   { host
   ; port
   ; tezos_host
@@ -52,5 +61,6 @@ let load_variables () =
   ; blocklist_msg
   ; blocklist
   ; ratelimit = Ratelimit.create ~limit ~seconds
+  ; logs_level
   }
 ;;

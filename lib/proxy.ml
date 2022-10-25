@@ -14,7 +14,7 @@ let proxy_handler
   =
   let host = Utils.remove_slash_end ctx.variables.tezos_host in
   let uri = Uri.of_string (host ^ params.request.target) in
-  Logs.info (fun m -> m "Proxy to: %s" (Uri.to_string uri));
+  Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
   let response_client =
     Client.Oneshot.request
       ~headers:(Headers.to_list params.request.headers)
