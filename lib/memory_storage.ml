@@ -28,22 +28,17 @@ let add_or_replace t ip value =
   else String_Hashtbl.add t.counters ip value
 ;;
 
-let increment ~sw ~env ip t expiration =
+let increment ~clock ip t expiration =
   Eio.Mutex.use_rw ~protect:true t.mutex (fun () ->
     let value = String_Hashtbl.find_opt t.counters ip in
+    let now = Eio.Time.now clock in
     let counter =
       match value with
-      | None ->
-        let clock = Eio.Stdenv.clock env in
-        Eio.Fiber.fork ~sw (fun () ->
-          Eio.Time.sleep clock expiration;
-          Logs.debug (fun m -> m "Removing %s from the map" ip);
-          remove_all t ip);
-        let now = Eio.Time.now clock in
-        { count = 1; reset = now +. expiration }
+      | None -> { count = 1; reset = now +. expiration }
       | Some { count; reset } ->
-        let new_value = count + 1 in
-        { count = new_value; reset }
+        if reset < now
+        then { count = 1; reset = now +. expiration }
+        else { count = count + 1; reset }
     in
     add_or_replace t ip counter;
     counter)

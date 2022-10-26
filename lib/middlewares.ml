@@ -13,10 +13,10 @@ let block_ip next (params : Request_info.t Server.ctx) (ctx : Ctx.t) =
 
 let rate_limite next params (ctx : Ctx.t) =
   let ip = Ip.real_ip params |> ip_to_string in
+  let clock = Eio.Stdenv.clock ctx.env in
   let counter =
     Memory_storage.increment
-      ~sw:ctx.sw
-      ~env:ctx.env
+      ~clock
       ip
       ctx.storage
       ctx.variables.ratelimit.seconds
