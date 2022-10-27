@@ -51,7 +51,7 @@ let load_variables () =
     | Some "info" -> Logs.Info
     | Some "warn" -> Logs.Warning
     | Some "error" -> Logs.Error
-    | _ -> Logs.Info
+    | _ -> Logs.Debug
   in
   { host
   ; port

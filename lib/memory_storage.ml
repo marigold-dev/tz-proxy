@@ -10,22 +10,39 @@ type t =
   ; mutex : Eio.Mutex.t
   }
 
-let create () =
-  { counters = String_Hashtbl.create 1000; mutex = Eio.Mutex.create () }
-;;
-
-let rec remove_all t ip =
-  match String_Hashtbl.mem t.counters ip with
-  | true ->
-    String_Hashtbl.remove t.counters ip;
-    remove_all t ip
-  | false -> ()
+let remove_all_expireds t now =
+  Eio.Mutex.use_rw ~protect:true t.mutex (fun () ->
+    Logs.debug (fun m ->
+      m
+        "Starting purge state with length: %d"
+        (String_Hashtbl.length t.counters));
+    String_Hashtbl.to_seq_keys t.counters
+    |> Seq.filter (fun ip ->
+         let { reset; _ } = String_Hashtbl.find t.counters ip in
+         reset <= now)
+    |> Seq.iter (fun ip -> String_Hashtbl.remove t.counters ip);
+    Logs.debug (fun m ->
+      m "Purged, with length state is: %d" (String_Hashtbl.length t.counters)))
 ;;
 
 let add_or_replace t ip value =
   if String_Hashtbl.mem t.counters ip
   then String_Hashtbl.replace t.counters ip value
   else String_Hashtbl.add t.counters ip value
+;;
+
+let rec purge ~clock t =
+  let now = Eio.Time.now clock in
+  Eio_unix.sleep 3600.;
+  remove_all_expireds t now;
+  purge ~clock t
+;;
+
+let create ~sw ~clock =
+  let counters = String_Hashtbl.create 1000 in
+  let t = { counters; mutex = Eio.Mutex.create () } in
+  Eio.Fiber.fork ~sw (fun () -> purge ~clock t);
+  t
 ;;
 
 let increment ~clock ip t expiration =
