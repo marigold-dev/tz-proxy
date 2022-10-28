@@ -42,7 +42,7 @@ let run ~host ~port ~sw env handler =
 
 let setup_pipeline (ctx : Ctx.t) next params = next params ctx
 
-let rec start ~sw env (variables : Variables.t) =
+let start ~sw env (variables : Variables.t) =
   let clock = Eio.Stdenv.clock env in
   let storage = Memory_storage.create ~sw ~clock in
   let piaf_config = Config.default in
@@ -54,8 +54,7 @@ let rec start ~sw env (variables : Variables.t) =
   | Error err ->
     Logs.err (fun m ->
       m "Error while connecting to node: %a" Error.pp_hum err);
-    Eio_unix.sleep 5.;
-    start ~sw env variables
+    failwith "Error while connecting to node"
   | Ok client ->
     Logs.info (fun m -> m "Connected with node: %s" (Uri.to_string tezos_uri));
     let ctx = Ctx.create sw env storage variables client in
