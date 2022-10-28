@@ -2,12 +2,12 @@
   description = "Nix Flake";
 
   inputs = {
-    nixpkgs.url = "github:anmonteiro/nix-overlays";
+    nixpkgs.url = "github:nix-ocaml/nix-overlays/029bcd66be430e4f1d0a73b771780564b4e95aa4";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter";
 
     ocaml-overlays.url =
-      "github:anmonteiro/nix-overlays/e44b12fc0850d10bdbb230c917b3473d05394a00";
+      "github:nix-ocaml/nix-overlays/029bcd66be430e4f1d0a73b771780564b4e95aa4";
     ocaml-overlays.inputs = {
       nixpkgs.follows = "nixpkgs";
       flake-utils.follows = "flake-utils";
@@ -23,7 +23,7 @@
           inherit system;
           extraOverlays = [ (import ./nix/overlay.nix) ];
         }).extend
-        (self: super: { ocamlPackages = super.ocaml-ng.ocamlPackages_5_00; });
+        (self: super: { ocamlPackages = super.ocaml-ng.ocamlPackages_5_0; });
 
       pkgs_static = pkgs.pkgsCross.musl64;
 

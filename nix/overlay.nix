@@ -22,24 +22,25 @@ in {
       #   src = prev.fetchFromGitHub {
       #     owner = "anmonteiro";
       #     repo = "piaf";
-      #     rev = "be16b6752000f24e4bf393ea5e312551ff86b9fd";
-      #     sha256 = "sha256-HyhdblCb2p6H1nmme6u6aBx/Rqmyde/9mwjslp9gFX0=";
+      #     rev = "cd3c040e04557cd38783aa5ec2ce144f8610e2f2";
+      #     sha256 = "sha256-Gl1emTfZE9UDEW5VDH68NwvYzdemxFMiu3Dx097uh9M=";
       #     fetchSubmodules = true;
       #   };
       #   patches = [ ];
       #   doCheck = false;
-      #   # propagatedBuildInputs = with osuper; [
-      #   #   eio
-      #   #   eio_main
-      #   #   eio-ssl
-      #   #   httpaf-eio
-      #   #   h2-eio
-      #   #   ipaddr
-      #   #   magic-mime
-      #   #   multipart_form
-      #   #   sendfile
-      #   #   uri
-      #   # ];
+      #   propagatedBuildInputs = with osuper; [
+      #     websocketaf
+      #     eio
+      #     eio_main
+      #     eio-ssl
+      #     httpaf-eio
+      #     h2-eio
+      #     ipaddr
+      #     magic-mime
+      #     multipart_form
+      #     sendfile
+      #     uri
+      #   ];
       # });
     })) prev.ocaml-ng;
 }

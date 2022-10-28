@@ -2,7 +2,6 @@
 
 let inherit (pkgs) lib stdenv ocamlPackages;
 
-
 in with ocamlPackages;
 buildDunePackage rec {
   pname = "tzproxy";
@@ -11,12 +10,7 @@ buildDunePackage rec {
   src = with nix-filter.lib;
     filter {
       root = ../.;
-      include = [
-        "bin"
-        "lib"
-        "dune-project"
-        "tzproxy.opam"
-      ];
+      include = [ "bin" "lib" "dune-project" "tzproxy.opam" ];
     };
 
   # This is the same as standard dune build but with static support
@@ -27,18 +21,16 @@ buildDunePackage rec {
     runHook postBuild
   '';
 
+  checkInputs = [ alcotest ];
   propagatedBuildInputs = [
     eio
     piaf
     eio_main
     ppx_deriving
-  ]
+  ] ++ checkInputs;
   # checkInputs are here because when cross compiling dune needs test dependencies
   # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
-    ++ checkInputs;
 
-  checkInputs = [ alcotest ];
-  
   # Remove every directory which could have links to other store paths.
   # This makes the result much smaller
   isLibrary = false;

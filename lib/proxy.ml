@@ -20,7 +20,7 @@ let proxy_handler
       ~headers:(Headers.to_list params.request.headers)
       ~body:params.request.body
       ~meth:params.request.meth
-      ~sw:ctx.sw
+      ~sw:params.ctx.sw
       ctx.env
       uri
     |> or_error
@@ -44,7 +44,7 @@ let setup_pipeline (ctx : Ctx.t) next params = next params ctx
 let start ~sw env (variables : Variables.t) =
   let clock = Eio.Stdenv.clock env in
   let storage = Memory_storage.create ~sw ~clock in
-  let ctx = Ctx.create sw env storage variables in
+  let ctx = Ctx.create env storage variables in
   let host = Ip.string_to_ip ctx.variables.host in
   setup_pipeline ctx
   @@ Middlewares.block_ip

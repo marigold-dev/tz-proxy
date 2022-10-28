@@ -51,32 +51,33 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1666922052,
-        "narHash": "sha256-gynfmRShZPqjh+mesarAUm3O9MYof+JyEWgxfWRGu6U=",
-        "owner": "anmonteiro",
+        "lastModified": 1666995116,
+        "narHash": "sha256-WF5K32po1jncZTxFTmmmrqIioRTdEKVGTU7DxnTjAWw=",
+        "owner": "nix-ocaml",
         "repo": "nix-overlays",
-        "rev": "8146ef7a5e662b3287dbda257850f1569eac02dd",
+        "rev": "029bcd66be430e4f1d0a73b771780564b4e95aa4",
         "type": "github"
       },
       "original": {
-        "owner": "anmonteiro",
+        "owner": "nix-ocaml",
         "repo": "nix-overlays",
+        "rev": "029bcd66be430e4f1d0a73b771780564b4e95aa4",
         "type": "github"
       }
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1666896702,
-        "narHash": "sha256-CaLkRle0MUlxTpkIfs+WxN4XT9WQTD3RbG//nxWVF2Y=",
+        "lastModified": 1666954045,
+        "narHash": "sha256-ghZF9cEeYXHqrpC7UoCramcyc13N7eYzHtxuStcBXmA=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "d4f03f403ef67fab5175b4f8755f51bc4ecfea84",
+        "rev": "47293efac99595f29f28f58bc8c161137a543df5",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "d4f03f403ef67fab5175b4f8755f51bc4ecfea84",
+        "rev": "47293efac99595f29f28f58bc8c161137a543df5",
         "type": "github"
       }
     },
@@ -90,17 +91,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1663945543,
-        "narHash": "sha256-V/dGpI0RUZ+yqofyv/PFZaefEVHitA4XZHGodukq6iI=",
-        "owner": "anmonteiro",
+        "lastModified": 1666995116,
+        "narHash": "sha256-WF5K32po1jncZTxFTmmmrqIioRTdEKVGTU7DxnTjAWw=",
+        "owner": "nix-ocaml",
         "repo": "nix-overlays",
-        "rev": "e44b12fc0850d10bdbb230c917b3473d05394a00",
+        "rev": "029bcd66be430e4f1d0a73b771780564b4e95aa4",
         "type": "github"
       },
       "original": {
-        "owner": "anmonteiro",
+        "owner": "nix-ocaml",
         "repo": "nix-overlays",
-        "rev": "e44b12fc0850d10bdbb230c917b3473d05394a00",
+        "rev": "029bcd66be430e4f1d0a73b771780564b4e95aa4",
         "type": "github"
       }
     },
