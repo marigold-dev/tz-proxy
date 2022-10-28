@@ -3,6 +3,7 @@ type t =
   ; env : Eio.Stdenv.t
   ; storage : Memory_storage.t
   ; variables : Variables.t
+  ; client: Piaf.Client.t
   }
 
-let create sw env storage variables = { sw; env; storage; variables }
+let create sw env storage variables client = { sw; env; storage; variables; client }
