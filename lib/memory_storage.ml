@@ -12,7 +12,7 @@ type t =
 
 let remove_all_expireds t now =
   Eio.Mutex.use_rw ~protect:true t.mutex (fun () ->
-    Logs.debug (fun m ->
+    Logs.info (fun m ->
       m
         "Starting purge state with length: %d"
         (String_Hashtbl.length t.counters));
@@ -21,7 +21,7 @@ let remove_all_expireds t now =
          let { reset; _ } = String_Hashtbl.find t.counters ip in
          reset <= now)
     |> Seq.iter (fun ip -> String_Hashtbl.remove t.counters ip);
-    Logs.debug (fun m ->
+    Logs.info (fun m ->
       m "Purged, with length state is: %d" (String_Hashtbl.length t.counters)))
 ;;
 
