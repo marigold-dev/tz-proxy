@@ -1,27 +1,13 @@
 let setup_log ?style_renderer level =
-  let pp_header src ppf (l, h) =
-    if l = Logs.App
-    then Format.fprintf ppf "%a" Logs_fmt.pp_header (l, h)
-    else (
-      let x =
-        match Array.length Sys.argv with
-        | 0 -> Filename.basename Sys.executable_name
-        | _n -> Filename.basename Sys.argv.(0)
-      in
-      let x =
-        if Logs.Src.equal src Logs.default then x else Logs.Src.name src
-      in
-      Format.fprintf ppf "%s: %a " x Logs_fmt.pp_header (l, h))
-  in
-  let format_reporter =
-    let report src =
-      let { Logs.report } = Logs_fmt.reporter ~pp_header:(pp_header src) () in
-      report src
-    in
-    { Logs.report }
-  in
   Fmt_tty.setup_std_outputs ?style_renderer ();
-  Fmt.set_style_renderer Fmt.stderr `Ansi_tty;
   Logs.set_level ~all:true level;
-  Logs.set_reporter format_reporter
+  (* disable all non-proxy logs *)
+  List.iter
+    (fun src ->
+      let src_name = Logs.Src.name src in
+      if (not (String.starts_with ~prefix:"server" src_name))
+         && not (String.equal src_name "application")
+      then Logs.Src.set_level src (Some Logs.Error))
+    (Logs.Src.list ());
+  Logs.set_reporter (Logs_fmt.reporter ())
 ;;
