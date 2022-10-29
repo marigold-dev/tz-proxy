@@ -42,8 +42,7 @@ let run ~host ~port ~sw env handler =
 let setup_pipeline (ctx : Ctx.t) next params = next params ctx
 
 let start ~sw env (variables : Variables.t) =
-  let clock = Eio.Stdenv.clock env in
-  let storage = Memory_storage.create ~sw ~clock in
+  let storage = Memory_storage.create ~sw ~env in
   let ctx = Ctx.create env storage variables in
   let host = Ip.string_to_ip ctx.variables.host in
   setup_pipeline ctx

@@ -31,17 +31,18 @@ let add_or_replace t ip value =
   else String_Hashtbl.add t.counters ip value
 ;;
 
-let rec purge ~clock t =
+let rec purge ~env t =
+  let clock = Eio.Stdenv.clock env in
   let now = Eio.Time.now clock in
   Eio_unix.sleep 3600.;
   remove_all_expireds t now;
-  purge ~clock t
+  purge ~env t
 ;;
 
-let create ~sw ~clock =
+let create ~sw ~env =
   let counters = String_Hashtbl.create 1000 in
   let t = { counters; mutex = Eio.Mutex.create () } in
-  Eio.Fiber.fork ~sw (fun () -> purge ~clock t);
+  Eio.Fiber.fork ~sw (fun () -> purge ~env t);
   t
 ;;
 
