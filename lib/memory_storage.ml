@@ -39,10 +39,10 @@ let rec purge ~env t =
   purge ~env t
 ;;
 
-let create ~sw ~env =
+let create =
   let counters = String_Hashtbl.create 1000 in
   let t = { counters; mutex = Eio.Mutex.create () } in
-  Eio.Fiber.fork ~sw (fun () -> purge ~env t);
+  (* Eio.Fiber.fork ~sw (fun () -> purge ~env t); *)
   t
 ;;
 
