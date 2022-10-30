@@ -4,8 +4,10 @@ let
   baseImage = pkgs.dockerTools.pullImage {
     imageName = "debian";
     imageDigest =
-      "sha256:e25b64a9cf82c72080074d6b1bba7329cdd752d51574971fd37731ed164f3345";
-    sha256 = "sha256-Ql7LWpMyRxL3biq3WujAyRJhr80Zy1lFKV2yP8LK/q4=";
+      "sha256:13db79e523a13e3e55b606128a4193d7b9ae788d0c11c95d6a6de0bd30aa3a14";
+    sha256 = "sha256-mfmiruXlmu5ksfI2g2AC07KOTiGNfM1vkB2X/QLV/Yg=";
+    finalImageTag = "stable";
+    finalImageName = "debian";
   };
 
 in pkgs.dockerTools.buildImage {
