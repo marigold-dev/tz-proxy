@@ -42,16 +42,10 @@
       in {
         devShell = import ./nix/shell.nix { inherit pkgs tzproxy; };
         packages = {
-          # inherit tzproxy tzproxy_static;
-          # docker = import ./nix/docker.nix {
-          #     inherit pkgs;
-          #     tzproxy = tzproxy_static;
-          #   };
-
           inherit tzproxy tzproxy_static;
           docker = import ./nix/docker.nix {
             inherit pkgs;
-            tzproxy = tzproxy;
+            tzproxy = tzproxy_static;
           };
         };
 
