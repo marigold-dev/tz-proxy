@@ -26,14 +26,16 @@ let proxy_handler
   let request =
     Request.create
       ~scheme:`HTTP
-      ~version:Versions.HTTP.HTTP_1_1
+      ~version:Versions.HTTP.HTTP_2
       ~headers:(Headers.of_list headers)
       ~body:params.request.body
       ~meth:params.request.meth
       target
   in
   let response_client = Client.send client request |> or_error in
-  Client.shutdown client;
+  Eio.Fiber.fork ~sw:params.ctx.sw (fun () ->
+    let _closed = Body.closed response_client.body in
+    Client.shutdown client);
   let headers =
     Headers.to_list response_client.headers @ additional_headers
     |> Headers.of_list
