@@ -3,7 +3,7 @@
 with pkgs;
 with ocamlPackages;
 mkShell {
-  OCAMLRUNPARAM = "o=40";
+  # OCAMLRUNPARAM = "o=20";
   inputsFrom = [ tzproxy ];
   packages = [ nixfmt utop ocamlformat ocaml findlib dune odoc ocaml-lsp ];
 }

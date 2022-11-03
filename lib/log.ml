@@ -1,5 +1,5 @@
-let setup_log ?_style_renderer level =
-  (* Fmt_tty.setup_std_outputs ?style_renderer (); *)
+let setup_log ?style_renderer level =
+  Fmt_tty.setup_std_outputs ?style_renderer ();
   Logs.set_level ~all:true level;
   (* disable all non-proxy logs *)
   List.iter

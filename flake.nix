@@ -1,14 +1,14 @@
 {
-  description = "Nix Flake";
+  # description = "Nix Flake";
 
   inputs = {
     nixpkgs.url =
-      "github:nix-ocaml/nix-overlays/029bcd66be430e4f1d0a73b771780564b4e95aa4";
+      "github:nix-ocaml/nix-overlays/6f9288d9cd4f5238d7798fc32c2998c3d6a2b1d3";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter";
 
     ocaml-overlays.url =
-      "github:nix-ocaml/nix-overlays/029bcd66be430e4f1d0a73b771780564b4e95aa4";
+      "github:nix-ocaml/nix-overlays/6f9288d9cd4f5238d7798fc32c2998c3d6a2b1d3";
     ocaml-overlays.inputs = {
       nixpkgs.follows = "nixpkgs";
       flake-utils.follows = "flake-utils";

@@ -15,6 +15,7 @@ let proxy_handler
   let host = Utils.remove_slash_end ctx.variables.tezos_host in
   let uri = Uri.of_string (host ^ params.request.target) in
   Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
+  (* Gc.full_major (); *)
   let response_client =
     Client.Oneshot.request
       ~headers:(Headers.to_list params.request.headers)
@@ -42,6 +43,11 @@ let run ~host ~port ~sw env handler =
 let setup_pipeline (ctx : Ctx.t) next params = next params ctx
 
 let start ~sw env (variables : Variables.t) =
+  Gc.set
+    { (Gc.get ()) with
+      Gc.minor_heap_size = 1024 * 1024;
+      Gc.space_overhead = 20
+    };
   let storage = Memory_storage.create in
   let ctx = Ctx.create env storage variables in
   let host = Ip.string_to_ip ctx.variables.host in

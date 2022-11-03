@@ -17,7 +17,7 @@ buildDunePackage rec {
   buildPhase = ''
     runHook preBuild
     echo "running ${if static then "static" else "release"} build"
-    OCAMLRUNPARAM="o=40" dune build -p ${pname} --profile=${if static then "static" else "release"}
+    dune build -p ${pname} --profile=${if static then "static" else "release"}
     runHook postBuild
   '';
 
