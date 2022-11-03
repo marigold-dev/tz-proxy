@@ -12,23 +12,28 @@ let proxy_handler
   (ctx : Ctx.t)
   additional_headers
   =
-  
   let host = Utils.remove_slash_end ctx.variables.tezos_host in
+  let target = host ^ params.request.target in
   let uri = Uri.of_string (host ^ params.request.target) in
-  Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
+  (* Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri)); *)
+  let config = Config.default in
+  let client =
+    Client.create ~config ~sw:params.ctx.sw ctx.env uri |> Result.get_ok
+  in
   let headers =
     Headers.to_list params.request.headers @ [ "connection", "close" ]
   in
-  let response_client =
-    Client.Oneshot.request
-      ~headers
+  let request =
+    Request.create
+      ~scheme:`HTTP
+      ~version:Versions.HTTP.HTTP_1_1
+      ~headers:(Headers.of_list headers)
       ~body:params.request.body
       ~meth:params.request.meth
-      ~sw:params.ctx.sw
-      ctx.env
-      uri
-    |> or_error
+      target
   in
+  let response_client = Client.send client request |> or_error in
+  Client.shutdown client;
   let headers =
     Headers.to_list response_client.headers @ additional_headers
     |> Headers.of_list
