@@ -15,8 +15,8 @@ let proxy_handler
   let host = Utils.remove_slash_end ctx.variables.tezos_host in
   let target = host ^ params.request.target in
   let uri = Uri.of_string (host ^ params.request.target) in
-  (* Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri)); *)
-  let config = Config.default in
+  Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
+  let config = { Config.default with body_buffer_size = 0x1_000_000 } in
   let client =
     Client.create ~config ~sw:params.ctx.sw ctx.env uri |> Result.get_ok
   in
@@ -26,7 +26,7 @@ let proxy_handler
   let request =
     Request.create
       ~scheme:`HTTP
-      ~version:Versions.HTTP.HTTP_2
+      ~version:params.request.version
       ~headers:(Headers.of_list headers)
       ~body:params.request.body
       ~meth:params.request.meth
@@ -34,8 +34,12 @@ let proxy_handler
   in
   let response_client = Client.send client request |> or_error in
   Eio.Fiber.fork ~sw:params.ctx.sw (fun () ->
-    let _closed = Body.closed response_client.body in
-    Client.shutdown client);
+    let closed = Body.closed response_client.body in
+    match closed with
+    | Ok () -> Client.shutdown client
+    | Error err ->
+      Logs.err (fun m ->
+        m "Error on close close connection: %a" Error.pp_hum err));
   let headers =
     Headers.to_list response_client.headers @ additional_headers
     |> Headers.of_list
