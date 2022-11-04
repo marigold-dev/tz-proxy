@@ -13,6 +13,8 @@ in {
           prev.lib.lists.remove osuper.uuidm o.propagatedBuildInputs;
       });
 
+      eio_main = osuper.eio_main.overrideAttrs
+        (_: { propagatedBuildInputs = with osuper; [ eio_luv ]; });
       # uri = osuper.uri.overrideAttrs (o: {
       #   propagatedBuildInputs = (with osuper; [ ounit ])
       #     ++ o.propagatedBuildInputs;
