@@ -31,18 +31,20 @@ let proxy_handler
       target
   in
   let response_client = Client.send client request |> or_error in
-  let p, u = Eio.Promise.create () in
-  Eio.Fiber.fork ~sw:params.ctx.sw (fun () ->
-    let closed = Body.closed response_client.body in
-    match closed with
-    | Ok () ->
-      Client.shutdown client;
-      Eio.Promise.resolve u ()
-    | Error err ->
+  Eio.Fiber.fork_sub
+    ~sw:params.ctx.sw
+    ~on_error:(fun exn ->
       Logs.err (fun m ->
-        m "Error on close close connection: %a" Error.pp_hum err);
-      Eio.Promise.resolve u ());
-  Eio.Promise.await p;
+        m "Error on fork of close connection: %a" Fmt.exn exn))
+    (fun _ ->
+      let closed = Body.closed response_client.body in
+      match closed with
+      | Ok () ->
+        Client.shutdown client;
+        Logs.debug (fun m -> m "Client shutdown")
+      | Error err ->
+        Logs.err (fun m ->
+          m "Error on close close connection: %a" Error.pp_hum err));
   let headers =
     Headers.to_list response_client.headers @ additional_headers
     |> Headers.of_list
