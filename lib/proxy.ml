@@ -16,7 +16,12 @@ let proxy_handler
   let target = host ^ params.request.target in
   let uri = Uri.of_string (host ^ params.request.target) in
   Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
-  let config = { Config.default with body_buffer_size = 0x1_000_000 } in
+  let config =
+    { Config.default with
+      body_buffer_size = 0x1_000_000
+    ; tcp_nodelay = false
+    }
+  in
   let client =
     Client.create ~config ~sw:params.ctx.sw ctx.env uri |> Result.get_ok
   in
