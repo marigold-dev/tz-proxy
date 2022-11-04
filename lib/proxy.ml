@@ -20,9 +20,7 @@ let proxy_handler
   let client =
     Client.create ~config ~sw:params.ctx.sw ctx.env uri |> Result.get_ok
   in
-  let headers =
-    Headers.to_list params.request.headers @ [ "connection", "close" ]
-  in
+  let headers = Headers.to_list params.request.headers in
   let request =
     Request.create
       ~scheme:`HTTP
@@ -33,13 +31,18 @@ let proxy_handler
       target
   in
   let response_client = Client.send client request |> or_error in
+  let p, u = Eio.Promise.create () in
   Eio.Fiber.fork ~sw:params.ctx.sw (fun () ->
     let closed = Body.closed response_client.body in
     match closed with
-    | Ok () -> Client.shutdown client
+    | Ok () ->
+      Client.shutdown client;
+      Eio.Promise.resolve u ()
     | Error err ->
       Logs.err (fun m ->
-        m "Error on close close connection: %a" Error.pp_hum err));
+        m "Error on close close connection: %a" Error.pp_hum err);
+      Eio.Promise.resolve u ());
+  Eio.Promise.await p;
   let headers =
     Headers.to_list response_client.headers @ additional_headers
     |> Headers.of_list
