@@ -16,15 +16,15 @@ let proxy_handler
   let target = host ^ params.request.target in
   let uri = Uri.of_string (host ^ params.request.target) in
   Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
-  let config =
-    { Config.default with
-      body_buffer_size = 0x1_000_000
-    ; tcp_nodelay = false
-    }
-  in
-  let client =
-    Client.create ~config ~sw:params.ctx.sw ctx.env uri |> Result.get_ok
-  in
+  (* let config = *)
+  (*   { Config.default with *)
+  (*     body_buffer_size = 0x1_000_000 *)
+  (*   ; tcp_nodelay = false *)
+  (*   } *)
+  (* in *)
+  (* let client = *)
+  (*   Client.create ~config ~sw:params.ctx.sw ctx.env uri |> Result.get_ok *)
+  (* in *)
   let headers = Headers.to_list params.request.headers in
   let request =
     Request.create
@@ -35,21 +35,21 @@ let proxy_handler
       ~meth:params.request.meth
       target
   in
-  let response_client = Client.send client request |> or_error in
-  Eio.Fiber.fork_sub
-    ~sw:params.ctx.sw
-    ~on_error:(fun exn ->
-      Logs.err (fun m ->
-        m "Error on fork of close connection: %a" Fmt.exn exn))
-    (fun _ ->
-      let closed = Body.closed response_client.body in
-      match closed with
-      | Ok () ->
-        Client.shutdown client;
-        Logs.debug (fun m -> m "Client shutdown")
-      | Error err ->
-        Logs.err (fun m ->
-          m "Error on close close connection: %a" Error.pp_hum err));
+  let response_client = Client.send ctx.client request |> or_error in
+  (* Eio.Fiber.fork_sub *)
+  (*   ~sw:params.ctx.sw *)
+  (*   ~on_error:(fun exn -> *)
+  (*     Logs.err (fun m -> *)
+  (*       m "Error on fork of close connection: %a" Fmt.exn exn)) *)
+  (*   (fun _ -> *)
+  (*     let closed = Body.closed response_client.body in *)
+  (*     match closed with *)
+  (*     | Ok () -> *)
+  (*       Client.shutdown client; *)
+  (*       Logs.debug (fun m -> m "Client shutdown") *)
+  (*     | Error err -> *)
+  (*       Logs.err (fun m -> *)
+  (*         m "Error on close close connection: %a" Error.pp_hum err)); *)
   let headers =
     Headers.to_list response_client.headers @ additional_headers
     |> Headers.of_list
@@ -67,8 +67,11 @@ let run ~host ~port ~sw env handler =
 let setup_pipeline (ctx : Ctx.t) next params = next params ctx
 
 let start ~sw env (variables : Variables.t) =
+  let config = { Config.default with body_buffer_size = 0x1_000_000 } in
+  let uri = Uri.of_string (variables.tezos_host ^ "/version") in
+  let client = Client.create ~config ~sw env uri |> Result.get_ok in
   let storage = Memory_storage.create in
-  let ctx = Ctx.create env storage variables in
+  let ctx = Ctx.create env storage variables client in
   let host = Ip.string_to_ip ctx.variables.host in
   setup_pipeline ctx
   @@ Middlewares.block_ip
