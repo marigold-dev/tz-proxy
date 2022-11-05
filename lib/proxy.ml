@@ -37,14 +37,19 @@ let proxy_handler
       let client = Client.create ~config ~sw ctx.env uri |> Result.get_ok in
       let response_client = Client.send client request |> or_error in
       Eio.Promise.resolve u response_client;
-      let closed = Body.closed response_client.body in
-      match closed with
-      | Ok () ->
-        Client.shutdown client;
-        Logs.debug (fun m -> m "Client shutdown")
-      | Error err ->
-        Logs.err (fun m ->
-          m "Error on close close connection: %a" Error.pp_hum err));
+      Eio.Fiber.fork ~sw (fun _ ->
+        let clock = Eio.Stdenv.clock ctx.env in
+        Eio.Time.sleep clock 10.;
+        Client.shutdown client
+        (* let closed = Body.closed response_client.body in *)
+        (* match closed with *)
+        (* | Ok () -> *)
+        (*   Client.shutdown client; *)
+        (*   Logs.debug (fun m -> m "Client shutdown") *)
+        (* | Error err -> *)
+        (*   Logs.err (fun m -> *)
+        (*     m "Error on close close connection: %a" Error.pp_hum err) *)));
+  Eio.Fiber.yield ();
   let response_client = Eio.Promise.await p in
   let headers =
     Headers.to_list response_client.headers @ additional_headers
