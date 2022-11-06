@@ -16,7 +16,6 @@ let proxy_handler
   let config = { Config.default with body_buffer_size = 0x1_000_000 } in
   let host = Utils.remove_slash_end ctx.variables.tezos_host in
   let target = host ^ params.request.target in
-  let sw = params.ctx.sw in
   let uri = Uri.of_string (host ^ params.request.target) in
   Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
   let headers = Headers.to_list params.request.headers in
@@ -32,12 +31,11 @@ let proxy_handler
   let client_result = Client.create ~config ~sw:params.ctx.sw ctx.env uri in
   match client_result with
   | Ok client ->
-    Switch.on_release sw (fun () -> Utils.safe_shutdown_client client);
     let response_client = Client.send client request |> or_error in
-    Fiber.fork ~sw (fun _ ->
+    Fiber.fork ~sw:params.ctx.sw (fun _ ->
       let clock = Stdenv.clock ctx.env in
       match
-        Time.with_timeout clock 60. (fun () ->
+        Time.with_timeout clock 30. (fun () ->
           let closed = Body.closed response_client.body in
           (match closed with
            | Ok () ->

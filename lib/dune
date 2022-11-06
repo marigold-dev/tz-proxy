@@ -1,5 +1,4 @@
 (library
  (name tzproxy)
  (package tzproxy)
- (libraries fmt logs.fmt fmt.tty piaf eio eio_main)
- )
+ (libraries fmt logs.fmt fmt.tty piaf eio eio_main))
