@@ -16,6 +16,7 @@ let proxy_handler
   let config = { Config.default with body_buffer_size = 0x1_000_000 } in
   let host = Utils.remove_slash_end ctx.variables.tezos_host in
   let target = host ^ params.request.target in
+  let sw = params.ctx.sw in
   let uri = Uri.of_string (host ^ params.request.target) in
   Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
   let headers = Headers.to_list params.request.headers in
@@ -32,23 +33,22 @@ let proxy_handler
   match client_result with
   | Ok client ->
     let response_client = Client.send client request |> or_error in
-    Fiber.fork ~sw:params.ctx.sw (fun _ ->
+    Fiber.fork ~sw (fun _ ->
       Fiber.first
         (fun () ->
           let clock = Stdenv.clock ctx.env in
-          Eio.Time.sleep clock 30.;
-          Client.shutdown client;
-          Logs.debug (fun m -> m "Client shutdown by timeout"))
+          Eio.Time.sleep clock 60.;
+          Utils.safe_shutdown_client client;
+          Logs.err (fun m -> m "Client shutdown by timeout"))
         (fun () ->
           let closed = Body.closed response_client.body in
           match closed with
           | Ok () ->
-            Client.shutdown client;
+            Utils.safe_shutdown_client client;
             Logs.debug (fun m -> m "Client shutdown")
           | Error err ->
             Logs.err (fun m ->
-              m "Error on close connection: %a" Error.pp_hum err;
-              Client.shutdown client)));
+              m "Error on close connection: %a" Error.pp_hum err)));
     let headers =
       Headers.to_list response_client.headers @ additional_headers
       |> Headers.of_list

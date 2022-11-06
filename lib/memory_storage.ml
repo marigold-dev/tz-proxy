@@ -20,9 +20,7 @@ let remove_all_expireds t now =
     |> Seq.filter (fun ip ->
          let { reset; _ } = String_Hashtbl.find t.counters ip in
          reset <= now)
-    |> Seq.iter (fun ip -> String_Hashtbl.remove t.counters ip);
-    Logs.info (fun m ->
-      m "Purged, with length state is: %d" (String_Hashtbl.length t.counters)))
+    |> Seq.iter (fun ip -> String_Hashtbl.remove t.counters ip))
 ;;
 
 let add_or_replace t ip value =
@@ -34,9 +32,10 @@ let add_or_replace t ip value =
 let rec purge env t =
   let clock = Eio.Stdenv.clock env in
   let now = Eio.Time.now clock in
-  Eio_unix.sleep 3600.;
+  Eio.Time.sleep clock 3600.;
   remove_all_expireds t now;
-  Gc.full_major ();
+  Logs.info (fun m ->
+    m "Purged, with length state is: %d" (String_Hashtbl.length t.counters));
   purge env t
 ;;
 
