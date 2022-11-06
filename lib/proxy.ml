@@ -18,7 +18,9 @@ let proxy_handler
   let target = host ^ params.request.target in
   let uri = Uri.of_string (host ^ params.request.target) in
   Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
-  let headers = Headers.to_list params.request.headers in
+  let headers =
+    Headers.to_list params.request.headers @ [ "connection", "close" ]
+  in
   let request =
     Request.create
       ~scheme:`HTTP
@@ -32,24 +34,9 @@ let proxy_handler
   match client_result with
   | Ok client ->
     let response_client = Client.send client request |> or_error in
-    Fiber.fork ~sw:params.ctx.sw (fun _ ->
-      let clock = Stdenv.clock ctx.env in
-      match
-        Time.with_timeout clock 30. (fun () ->
-          let closed = Body.closed response_client.body in
-          (match closed with
-           | Ok () ->
-             Utils.safe_shutdown_client client;
-             Logs.debug (fun m -> m "Client shutdown")
-           | Error err ->
-             Logs.err (fun m ->
-               m "Error on close connection: %a" Error.pp_hum err));
-          Result.ok ())
-      with
-      | Ok () -> ()
-      | Error `Timeout ->
-        Utils.safe_shutdown_client client;
-        Logs.err (fun m -> m "Client shutdown by timeout"));
+    Switch.on_release params.ctx.sw (fun () ->
+      Logs.debug (fun m -> m "Connection release");
+      Client.shutdown client);
     let headers =
       Headers.to_list response_client.headers @ additional_headers
       |> Headers.of_list
