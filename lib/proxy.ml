@@ -32,6 +32,7 @@ let proxy_handler
   let client_result = Client.create ~config ~sw:params.ctx.sw ctx.env uri in
   match client_result with
   | Ok client ->
+    Switch.on_release sw (fun () -> Utils.safe_shutdown_client client);
     let response_client = Client.send client request |> or_error in
     Fiber.fork ~sw (fun _ ->
       Fiber.first
