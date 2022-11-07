@@ -1,6 +1,7 @@
 type t =
   { host : string
   ; port : int
+  ; backlog : int
   ; tezos_host : string
   ; ratelimit_enable : bool
   ; blocklist_enable : bool
@@ -27,6 +28,9 @@ let load_variables () =
   in
   let seconds =
     Sys.getenv_opt "RATE_LIMIT_SECONDS" |> as_default "60." |> float_of_string
+  in
+  let backlog =
+    Sys.getenv_opt "BACKLOG_CONN" |> as_default "50" |> int_of_string
   in
   let ratelimit_enable =
     Sys.getenv_opt "RATE_LIMIT_ENABLE" |> as_default "true" |> bool_of_string
@@ -55,6 +59,7 @@ let load_variables () =
   in
   { host
   ; port
+  ; backlog
   ; tezos_host
   ; ratelimit_enable
   ; blocklist_enable

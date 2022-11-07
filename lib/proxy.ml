@@ -13,14 +13,12 @@ let proxy_handler
   (ctx : Ctx.t)
   additional_headers
   =
-  let config = { Config.default with body_buffer_size = 0x1_000_000 } in
+  let config = { Config.default with body_buffer_size = 0x100_000 } in
   let host = Utils.remove_slash_end ctx.variables.tezos_host in
   let target = host ^ params.request.target in
   let uri = Uri.of_string (host ^ params.request.target) in
   Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
-  let headers =
-    Headers.to_list params.request.headers @ [ "connection", "close" ]
-  in
+  let headers = Headers.to_list params.request.headers in
   let request =
     Request.create
       ~scheme:`HTTP
@@ -34,9 +32,26 @@ let proxy_handler
   match client_result with
   | Ok client ->
     let response_client = Client.send client request |> or_error in
-    Switch.on_release params.ctx.sw (fun () ->
-      Logs.debug (fun m -> m "Connection release");
-      Client.shutdown client);
+    (* We need a sw per request that works for that solution *)
+    (* Switch.on_release params.ctx.sw (fun () -> Client.shutdown client); *)
+    Fiber.fork ~sw:params.ctx.sw (fun _ ->
+      let clock = Stdenv.clock ctx.env in
+      match
+        Time.with_timeout clock 30. (fun () ->
+          let closed = Body.closed response_client.body in
+          (match closed with
+           | Ok () ->
+             Utils.safe_shutdown_client client;
+             Logs.debug (fun m -> m "Client shutdown")
+           | Error err ->
+             Logs.err (fun m ->
+               m "Error on close connection: %a" Error.pp_hum err));
+          Result.ok ())
+      with
+      | Ok () -> ()
+      | Error `Timeout ->
+        Utils.safe_shutdown_client client;
+        Logs.err (fun m -> m "Client shutdown by timeout"));
     let headers =
       Headers.to_list response_client.headers @ additional_headers
       |> Headers.of_list
@@ -47,10 +62,10 @@ let proxy_handler
     Response.of_string ~body `Service_unavailable
 ;;
 
-let run ~host ~port ~sw env handler =
-  let config = Server.Config.create port in
+let run ~sw ~env ~host ~port ~backlog handler =
+  let config = Server.Config.create ~backlog ~address:host port in
   let server = Server.create ~config handler in
-  let _command = Server.Command.start ~bind_to_address:host ~sw env server in
+  let _command = Server.Command.start ~sw env server in
   Logs.info (fun m -> m "Server listening on port %d" port)
 ;;
 
@@ -64,5 +79,5 @@ let start ~sw env (variables : Variables.t) =
   @@ Middlewares.block_ip
   @@ Middlewares.rate_limite
   @@ proxy_handler
-  |> run ~host ~port:variables.port ~sw env
+  |> run ~sw ~env ~host ~port:variables.port ~backlog:variables.backlog
 ;;
