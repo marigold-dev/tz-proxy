@@ -44,17 +44,11 @@ let proxy_handler
       target
   in
   let res_client = Client.send ctx.client request |> or_error in
-  let body_result = res_client.body |> Body.to_string in
-  match body_result with
-  | Ok body ->
-    let headers =
-      Headers.to_list res_client.headers @ additional_headers
-      |> Headers.of_list
-    in
-    Response.of_string ~headers ~body res_client.status
-  | Error err ->
-    let body = Format.asprintf "Service unavailable: %a" Error.pp_hum err in
-    Response.of_string ~body `Service_unavailable
+  let body = res_client.body |> Body.to_string_stream in
+  let headers =
+    Headers.to_list res_client.headers @ additional_headers |> Headers.of_list
+  in
+  Response.of_string_stream ~headers ~body res_client.status
 ;;
 
 let run ~sw ~env ~host ~port ~backlog handler =
