@@ -44,11 +44,11 @@ let proxy_handler
       target
   in
   let res_client = Client.send ctx.client request |> or_error in
-  let body = res_client.body |> Body.to_string_stream in
+  let body = res_client.body |> Body.to_stream in
   let headers =
     Headers.to_list res_client.headers @ additional_headers |> Headers.of_list
   in
-  Response.of_string_stream ~headers ~body res_client.status
+  Response.of_stream ~headers ~body res_client.status
 ;;
 
 let run ~sw ~env ~host ~port ~backlog handler =
