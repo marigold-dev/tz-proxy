@@ -23,6 +23,7 @@ let proxy_handler
   (ctx : Ctx.t)
   additional_headers
   =
+  let config = { Config.default with body_buffer_size = 0x100_000 } in
   let host = Utils.remove_slash_end ctx.variables.tezos_host in
   let target = host ^ params.request.target in
   let uri = Uri.of_string (host ^ params.request.target) in
@@ -43,12 +44,38 @@ let proxy_handler
       ~meth:params.request.meth
       target
   in
-  let res_client = Client.send ctx.client request |> or_error in
-  let body = res_client.body |> Body.to_stream in
-  let headers =
-    Headers.to_list res_client.headers @ additional_headers |> Headers.of_list
-  in
-  Response.of_stream ~headers ~body res_client.status
+  let client_result = Client.create ~config ~sw:params.ctx.sw ctx.env uri in
+  match client_result with
+  | Ok client ->
+    let response_client = Client.send client request |> or_error in
+    (* We need a sw per request that works for that solution *)
+    (* Switch.on_release params.ctx.sw (fun () -> Client.shutdown client); *)
+    Fiber.fork ~sw:params.ctx.sw (fun _ ->
+      let clock = Stdenv.clock ctx.env in
+      match
+        Time.with_timeout clock 30. (fun () ->
+          let closed = Body.closed response_client.body in
+          (match closed with
+           | Ok () ->
+             Utils.safe_shutdown_client client;
+             Logs.debug (fun m -> m "Client shutdown")
+           | Error err ->
+             Logs.err (fun m ->
+               m "Error on close connection: %a" Error.pp_hum err));
+          Result.ok ())
+      with
+      | Ok () -> ()
+      | Error `Timeout ->
+        Utils.safe_shutdown_client client;
+        Logs.err (fun m -> m "Client shutdown by timeout"));
+    let headers =
+      Headers.to_list response_client.headers @ additional_headers
+      |> Headers.of_list
+    in
+    Response.create ~headers ~body:response_client.body response_client.status
+  | Error err ->
+    let body = Format.asprintf "Service unavailable: %a" Error.pp_hum err in
+    Response.of_string ~body `Service_unavailable
 ;;
 
 let run ~sw ~env ~host ~port ~backlog handler =
@@ -60,25 +87,14 @@ let run ~sw ~env ~host ~port ~backlog handler =
 
 let setup_pipeline (ctx : Ctx.t) next params = next params ctx
 
-let rec start ~sw env (variables : Variables.t) =
-  Logs.info (fun m -> m "Starting proxy server");
-  let config = { Config.default with body_buffer_size = 0x100_000 } in
-  let uri = Uri.of_string (variables.tezos_host ^ "/version") in
-  let client_result = Client.create ~config ~sw env uri in
-  match client_result with
-  | Ok client ->
-    Logs.info (fun m -> m "Connected to Tezos node");
-    Switch.on_release sw (fun () -> Client.shutdown client);
-    let storage = Memory_storage.create ~sw env in
-    let ctx = Ctx.create env storage variables client in
-    let host = Ip.string_to_ip ctx.variables.host in
-    setup_pipeline ctx
-    @@ Middlewares.block_ip
-    @@ Middlewares.rate_limite
-    @@ proxy_handler
-    |> run ~sw ~env ~host ~port:variables.port ~backlog:variables.backlog
-  | Error err ->
-    Logs.err (fun m -> m "Error on client creation: %a" Error.pp_hum err);
-    Eio_unix.sleep 5.0;
-    start ~sw env variables
+let start ~sw env (variables : Variables.t) =
+  Logs.info (fun m -> m "Connected to Tezos node");
+  let storage = Memory_storage.create ~sw env in
+  let ctx = Ctx.create env storage variables in
+  let host = Ip.string_to_ip ctx.variables.host in
+  setup_pipeline ctx
+  @@ Middlewares.block_ip
+  @@ Middlewares.rate_limite
+  @@ proxy_handler
+  |> run ~sw ~env ~host ~port:variables.port ~backlog:variables.backlog
 ;;
