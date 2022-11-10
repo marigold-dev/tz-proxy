@@ -14,8 +14,8 @@ let or_error = function
     obsoleted RFC 2616 (section 13.5.1) and are used for backward
     compatibility. *)
 let hop_headers =
-  [ "Connection"; "Proxy-Connection"; "Keep-Alive"; "Proxy-Authenticate"
-  ; "Proxy-Authorization"; "Te"; "Trailer"; "Transfer-Encoding"; "Upgrade" ]
+  [ "connection"; "proxy-connection"; "keep-alive"; "proxy-authenticate"
+  ; "proxy-authorization"; "te"; "trailer"; "transfer-encoding"; "upgrade" ]
 ;;
 
 let proxy_handler
@@ -29,7 +29,10 @@ let proxy_handler
   Logs.debug (fun m -> m "Proxy to: %s" (Uri.to_string uri));
   let headers = Headers.to_list params.request.headers in
   let headers_filtered =
-    List.filter (fun (header, _) -> not (List.mem header hop_headers)) headers
+    List.filter
+      (fun (header, _) ->
+        not (List.mem (header |> String.lowercase_ascii) hop_headers))
+      headers
   in
   let request =
     Request.create
