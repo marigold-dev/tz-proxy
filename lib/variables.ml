@@ -31,7 +31,7 @@ let env_tolist env default =
 
 let load_variables () =
   let tezos_host =
-    Sys.getenv_opt "TEZOS_URL" |> as_default "http://127.0.0.1:20000"
+    Sys.getenv_opt "TEZOS_URL" |> as_default "http://127.0.0.1:8732"
   in
   let host = Sys.getenv_opt "HOST" |> as_default "0.0.0.0" in
   let port = Sys.getenv_opt "PORT" |> as_default "8080" |> int_of_string in
