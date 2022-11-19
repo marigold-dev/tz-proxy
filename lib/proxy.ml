@@ -94,6 +94,7 @@ let start ~sw env (variables : Variables.t) =
   let host = Ip.string_to_ip ctx.variables.host in
   setup_pipeline ctx
   @@ Middlewares.block_ip
+  @@ Middlewares.block_routes
   @@ Middlewares.rate_limite
   @@ proxy_handler
   |> run ~sw ~env ~host ~port:variables.port ~backlog:variables.backlog

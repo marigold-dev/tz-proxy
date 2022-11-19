@@ -3,15 +3,37 @@ open Piaf
 let ip_to_string ip = Fmt.str "%a" Eio.Net.Ipaddr.pp ip
 
 let block_ip next (params : Request_info.t Server.ctx) (ctx : Ctx.t) =
-  if ctx.variables.ratelimit_enable
-  then (
+  match ctx.variables.blocklist_enable with
+  | false -> next params ctx
+  | true ->
     let ip = Ip.real_ip params |> ip_to_string in
-    if List.mem ip ctx.variables.blocklist
-    then (
-      let body = Body.of_string ctx.variables.blocklist_msg in
-      Response.create ~body `Forbidden)
-    else next params ctx)
-  else next params ctx
+    (match List.mem ip ctx.variables.blocklist with
+     | false -> next params ctx
+     | true ->
+       let body = Body.of_string ctx.variables.blocklist_msg in
+       Response.create ~body `Forbidden)
+;;
+
+let block_routes next (params : Request_info.t Server.ctx) (ctx : Ctx.t) =
+  match ctx.variables.blockroutes_enable with
+  | false -> next params ctx
+  | true ->
+    let urls = String.split_on_char '?' params.request.target in
+    let url = Utils.remove_slash_end (List.hd urls) in
+    Logs.err (fun m -> m "url: %s" url);
+    let is_block =
+      List.exists
+        (fun route ->
+          let compile = Str.regexp route in
+          Logs.err (fun m -> m "route: %s" route);
+          Str.string_match compile url 0)
+        ctx.variables.blockroutes
+    in
+    (match is_block with
+     | false -> next params ctx
+     | true ->
+       let body = Body.of_string ctx.variables.blockroutes_msg in
+       Response.create ~body `Forbidden)
 ;;
 
 let rate_limite next params (ctx : Ctx.t) =
