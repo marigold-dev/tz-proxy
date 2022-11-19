@@ -20,12 +20,10 @@ let block_routes next (params : Request_info.t Server.ctx) (ctx : Ctx.t) =
   | true ->
     let urls = String.split_on_char '?' params.request.target in
     let url = Utils.remove_slash_end (List.hd urls) in
-    Logs.err (fun m -> m "url: %s" url);
     let is_block =
       List.exists
         (fun route ->
           let compile = Str.regexp route in
-          Logs.err (fun m -> m "route: %s" route);
           Str.string_match compile url 0)
         ctx.variables.blockroutes
     in
