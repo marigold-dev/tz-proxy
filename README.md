@@ -1,24 +1,20 @@
-# tz-proxy
+# Tz-Proxy
 
-## Setup
+Tz-Proxy is a reverse proxy specificly for Tezos Nodes written entirely in OCaml.
 
-### Opam
+## Features
 
-First, create a switch like so:
+- [x] Rate limit on Requests
+- [x] Blocklist for IPs
+- [x] Blocklist for endpoints routes
+
+## Setup 
+
+Run the nix command:
 
 ```bash
-opam switch create . 5.0.0~alpha1 --no-install
+nix develop -L -c $SHELL
 ```
-
-Then you can run:
-
-```
-opam install ocamlformat
-opam install ocaml-lsp-server
-opam install . --deps-only --with-test
-```
-
-## Build and Test
 
 Build the codebase with:
 
