@@ -51,7 +51,7 @@ let load_variables () =
     Sys.getenv_opt "BLOCKLIST_ENABLE" |> as_default "true" |> bool_of_string
   in
   let blockroutes_enable =
-    Sys.getenv_opt "BLOCKROUTEs_ENABLE" |> as_default "true" |> bool_of_string
+    Sys.getenv_opt "BLOCKROUTES_ENABLE" |> as_default "true" |> bool_of_string
   in
   let blocklist_msg =
     Sys.getenv_opt "BLOCKLIST_MSG" |> as_default "Your IP is blocked"
