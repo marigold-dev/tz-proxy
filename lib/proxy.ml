@@ -79,7 +79,7 @@ let proxy_handler
 ;;
 
 let run ~sw ~env ~host ~port ~backlog handler =
-  let config = Server.Config.create ~backlog ~address:host port in
+  let config = Server.Config.create ~backlog (`Tcp (host, port)) in
   let server = Server.create ~config handler in
   let _command = Server.Command.start ~sw env server in
   Logs.info (fun m -> m "Server listening on port %d" port)
