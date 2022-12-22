@@ -44,30 +44,16 @@ let proxy_handler
       ~meth:params.request.meth
       target
   in
-  let client_result = Client.create ~config ~sw:params.ctx.sw ctx.env uri in
-  match client_result with
+  match Client.create ~config ~sw:params.ctx.sw ctx.env uri with
   | Ok client ->
     let response_client = Client.send client request |> or_error in
-    (* We need a sw per request that works for that solution *)
-    (* Switch.on_release params.ctx.sw (fun () -> Client.shutdown client); *)
     Fiber.fork ~sw:params.ctx.sw (fun _ ->
-      let clock = Stdenv.clock ctx.env in
-      match
-        Time.with_timeout clock 30. (fun () ->
-          let closed = Body.closed response_client.body in
-          (match closed with
-           | Ok () ->
-             Utils.safe_shutdown_client client;
-             Logs.debug (fun m -> m "Client shutdown")
-           | Error err ->
-             Logs.err (fun m ->
-               m "Error on close connection: %a" Error.pp_hum err));
-          Result.ok ())
-      with
-      | Ok () -> ()
-      | Error `Timeout ->
+      match Body.closed response_client.body with
+      | Ok () ->
         Utils.safe_shutdown_client client;
-        Logs.err (fun m -> m "Client shutdown by timeout"));
+        Logs.debug (fun m -> m "Client shutdown")
+      | Error err ->
+        Logs.err (fun m -> m "Error on close connection: %a" Error.pp_hum err));
     let headers =
       Headers.to_list response_client.headers @ additional_headers
       |> Headers.of_list
